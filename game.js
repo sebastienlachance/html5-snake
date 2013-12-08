@@ -5,8 +5,57 @@ var key = {
     right: 39
 }
 
-function SnakePart() {
+function SnakeTail(x, y) {
     //store each position frame
+    this.x = x;
+    this.y = y;
+    this.vx = 0;
+    this.vy = 0;
+    this.nextTail = null;
+    this.queue = [];
+    this.queue.push({vx: this.vx, vy: this.vy, expiresIn: null});
+    SnakeTail.prototype.update = function() {
+
+        this.x += this.queue[0].vx;
+        this.y += this.queue[0].vy;
+
+        if (this.queue[0].expiresIn === null) {
+
+        } else {
+            if (this.queue[0].expiresIn !== null){
+                this.queue[0].expiresIn--;
+                if (this.queue[0].expiresIn <= 0) {
+                    console.log(this.queue[0].expiresIn);
+                    this.queue.shift();
+                } else {
+
+                }
+            }
+        }
+
+    };
+
+    SnakeTail.prototype.render = function(ctx) {
+        ctx.setFillColor("red")
+        ctx.fillRect(this.x, this.y, 20, 20);
+    };
+
+    SnakeTail.prototype.setDirection = function(vx, vy, changesIn) {
+        if (this.nextTail != null) {
+            this.nextTail.setDirection(this.vx, this.vy, changesIn);
+        }
+console.log(changesIn);
+
+        this.queue[this.queue.length -1].expiresIn = changesIn;
+
+        if (this.vx == 0 && this.vy == 0)
+            this.queue[0].expiresIn = 20;
+
+        this.queue.push({vx: vx , vy: vy, expiresIn: null});
+
+
+
+    };
 }
 
 function Snake(x, y, keys) {
@@ -16,39 +65,76 @@ function Snake(x, y, keys) {
     this.vx = 0;
     this.vy = 0;
     this.keys = keys;
-    this.parts = [{x:x, y:y}];
-    this.snakeLenght = 1;
+    this.tail = null;
+    this.step = 0;
+    this.lastKey = null;
+    this.updatesSinceLastDirectionChange = 0;
 
     Snake.prototype.update = function() {
+
+
+
+
+        var keyPressed = null;
         if (this.keys[key.up]) {
             this.vy = -1;
             this.vx = 0;
-        }
 
-        if (this.keys[key.down]) {
+            keyPressed = key.up;
+
+        } else if (this.keys[key.down]) {
             this.vy = 1;
             this.vx = 0;
-        }
 
-        if (this.keys[key.right]) {
+            keyPressed = key.down;
+        }else if (this.keys[key.right]) {
             this.vx = 1;
             this.vy = 0;
-        }
 
-        if (this.keys[key.left]) {
+            keyPressed = key.right;
+        }else if (this.keys[key.left]) {
             this.vx = -1;
             this.vy = 0;
+
+            keyPressed = key.left;
         }
+
+        if (this.vx > 0 || this.vy > 0)
+            this.updatesSinceLastDirectionChange++;
+
+
+        if (keyPressed !== null && keyPressed !== this.lastKey) {
+            this.lastKey = keyPressed;
+            if (this.tail != null) {
+                this.tail.setDirection(this.vx, this.vy, this.updatesSinceLastDirectionChange)
+                this.updatesSinceLastDirectionChange = 0;
+            }
+        }
+
+
+
+
+
+        this.x += this.vx;
+        this.y += this.vy
+
+
+
+
+
+        if (this.tail != null) {
+            this.tail.update();
+        }
+
+
     },
 
     Snake.prototype.render = function(ctx) {
-        for (var i = 0; i < this.parts.length; i++) {
-            var part = this.parts[i];
-            part.x += this.vx;
-            part.y += this.vy
-            ctx.fillRect(part.x, part.y, 10, 10);
+        ctx.setFillColor("black")
+        ctx.fillRect(this.x, this.y, 20, 20);
+        if (this.tail != null) {
+            this.tail.render(ctx);
         }
-
     }
 }
 
@@ -68,6 +154,7 @@ function Game() {
     this.ctx = this.canvas.getContext("2d");
 
     this.snake = new Snake(50, 50, this.keys);
+    this.snake.tail = new SnakeTail(50, 50)
 
 
     Game.prototype.start = function() {
