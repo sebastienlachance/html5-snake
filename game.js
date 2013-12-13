@@ -23,7 +23,7 @@ function Food(x, y) {
 
     Food.prototype.collideWith = function(snake) {
 
-        var position = snake.parts[snake.parts.length - 1];
+        var position = snake.parts[0];
         var headX = (position.x);
         var headY = (position.y) ;
 
@@ -56,7 +56,7 @@ function Snake(x, y, keys, game) {
     this.vy = 0;
     this.keys = keys;
     this.parts = [];
-    this.speed = 1;
+    this.speed = 0.1;
     this.game = game;
     this.size = 10;
 
@@ -91,40 +91,27 @@ function Snake(x, y, keys, game) {
             keyPressed = key.left;
         }
 
-        for(var i = 0; i < this.parts.length; i++) {
-            
-            var current = this.parts[i];
-            if (i == this.parts.length - 1) {
-                current.x += this.vx,
-                current.y += this.vy
-            } else {
-                var nextInLine = this.parts[i + 1];    
-
-                current.x = nextInLine.x;
-                current.y = nextInLine.y;    
-            }
-        }
-        
-
+       
+        var head = {x: this.parts[0].x += this.vx, y: this.parts[0].y += this.vy};
         if (game.food.collideWith(this)) {
             this.addPart();
+            console.log("add part");
             game.food.reset();
+        } else {
+            this.parts.pop();
         }
+        this.parts.unshift(head);
      
     },
 
     Snake.prototype.render = function(graphics) {
-        graphics.drawLine("black", this.parts, 10);
+        for(var i = 0; i < this.parts.length; i++) {
+            graphics.drawRect("black", this.parts[i].x * 10, this.parts[i].y * 10, 10, 10)
+        }
     }
 
     Snake.prototype.addPart = function() {
-        var last = this.parts[0];
-        for (var i = 0; i < this.size; i++) {
-            this.parts.splice(0, 0, {
-                x: last.x,
-                y: last.y
-            });    
-        }
+
 
         document.getElementById("size").innerHTML = ((this.parts.length - 1) / 10) + 1;
         
@@ -137,14 +124,15 @@ function Graphics(ctx) {
     Graphics.prototype.drawLine = function(color, path, width) {
         console.log(path[0])
         this.ctx.setFillColor(color);
+        i/*
         this.ctx.lineWidth= width;
         this.ctx.beginPath();
-        this.ctx.moveTo(path[0].x, path[0].y );
+        this.ctx.moveTo(path[0].x, path[0].y );*/
         for(var i = 0; i < path.length; i++) {
             var point = path[i];
-            this.ctx.lineTo(point.x, point.y);    
-        }
-        this.ctx.stroke();
+            this.drawRect(color, point.x, point.y, 10, 10);    
+        }/*
+        this.ctx.stroke();*/
     }
 
     Graphics.prototype.drawRect = function(color, x, y, width, height) {
